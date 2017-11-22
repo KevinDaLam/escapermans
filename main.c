@@ -3,8 +3,12 @@
 #include <stdint.h>
 #include <peripherals.h>
 
+uint8_t n_lives = 3;
+uint8_t n_powerups = 3;
+
 struct Avatar avatar1 = DEFAULT_AVATAR;
 
+bool cmd_powerup = false;
 
 __task void update_avatar(void){
   
@@ -48,6 +52,11 @@ __task void update_platforms(void){
   	
   	os_tsk_pass();
   	
+  	if (cmd_powerup && n_powerups){
+  		platform_dig(avatar1->platform, avatar1->x_pos);
+  		cmd_powerup = false;
+  	}
+	
   }
 }
 
@@ -71,7 +80,18 @@ __task void start_tasks(void){
 	
 }
 
+void EINT3_IRQHandler(void){
+	cmd_powerup = true;
+	LPC_GPIOINT->IO2IntClr |= (1<<10);
+}
+
 int main(void){
+  
+  LPC_PINCON->PINSEL4 &= ~(3 << 20);
+  LPC_GPIO2->FIODIR &= ~(1<<10);
+  LPC_GPIOINT->IO2IntEnF |= (1<<10);
+  
+  NVIC_EnableIRQ(ENT3_IRQn);
   
   os_sys_init(start_tasks);
   

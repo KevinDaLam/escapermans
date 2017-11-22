@@ -19,14 +19,14 @@ struct Avatar {
 	bool falling;
 	uint8_t y_pos_falling;
 	
-	uint8_t size;
+	uint8_t size;https://github.com/KevinDaLam/escapermans/invitations
 };
 
 uint8_t avatar_get_y(struct Avatar *avatar);
 
 void avatar_bind_platform(struct Avatar *avatar, struct Platform *plat);
 
-void avatar_check_hole(struct Avatar *avatar);
+bool avatar_check_hole(struct Avatar *avatar);
 
 void avatar_start_fall(struct Avatar *avatar, struct Platform *next_plat);
 

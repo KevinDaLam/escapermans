@@ -16,7 +16,10 @@
 //Returns direction if pressed, else no move
 uint8_t poll_joystick_direction();
 
+void GLCD_update_avatar();
 
+void GLCD_update_platforms();
 
+void GLCD_update_lives();
 
 #endif
