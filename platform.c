@@ -2,7 +2,7 @@
 #include "platform.h"
 #include "GLCD.h"
 
-struct Platform *new_platform(void) {
+struct Platform *platform_generate(void) {
     int i;
     struct Platform *platform = malloc(sizeof(struct Platform));
 
@@ -10,9 +10,8 @@ struct Platform *new_platform(void) {
   
     //Initialize Holes
     for (i = 0; i < HOLE_MAX_N-1; i++) {
-        // Randomizes hole size and location
-        platform->holes[i].size = HOLE_MIN_SIZE + (rand()*(HOLE_MAX_SIZE - HOLE_MIN_SIZE));
-        platform->holes[i].loc = rand()*(LCD_MAX_WIDTH - HOLE_MAX_SIZE);
+        platform->holes[i].size = HOLE_MIN_SIZE + rand()%(HOLE_MAX_SIZE - HOLE_MIN_SIZE);
+        platform->holes[i].loc = rand()%(PLATFORM_WIDTH - HOLE_MAX_SIZE);
     }
     platform->holes[HOLE_MAX_N].size = 0;
     platform->holes[HOLE_MAX_N].loc = 0;
@@ -25,28 +24,33 @@ void platform_update_loc(struct Platform *platform, uint8_t y) {
 }
 
 void platform_dig(struct Platform *platform, uint8_t xloc) {
-    platform->holes[HOLE_MAX_N].size = DIG_HOLE_SIZE;
-    platform->holes[HOLE_MAX_N].loc = xloc;
+    platform->holes[HOLE_MAX_N - 1].size = DIG_HOLE_SIZE;
+    platform->holes[HOLE_MAX_N - 1].loc = xloc;
 }
 
 void platform_holify(struct Platform *platform, unsigned short *platform_bitmap, unsigned short bitmap_w) {
     int i;
 
     for (i = 0; i < HOLE_MAX_N; i++) {
-    // Only dig holes that have a non-zero size
+        printf("\n\ni : %d\n", i);
+        printf("Platform hole size: %d\n", platform->holes[i].size);
+        // Only dig holes that have a non-zero size
         if (platform->holes[i].size > 0) {
             int pix = platform->holes[i].loc, pix_w = 0, pix_h = 0;
             
-            while (pix_w < DIG_HOLE_SIZE || pix_h < PLATFORM_HEIGHT) {
+            while (pix_w < DIG_HOLE_SIZE && pix_h < PLATFORM_HEIGHT) {
                 platform_bitmap[pix] = White;
+                printf("x");
                 pix_w++;
+                pix++;
                 if (pix_w == DIG_HOLE_SIZE - 1) {
                     pix_h++;
-                    pix_w = platform->holes[i].loc;
-                    pix = pix_w + bitmap_w;
+                    pix_w = 0;
+                    pix = pix - DIG_HOLE_SIZE - 1 + bitmap_w;
                 }
             }
         }
+        printf("\n");
     }
 }
 
