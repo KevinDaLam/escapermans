@@ -3,23 +3,34 @@
 
 #include <stdint.h>
 
-#define MAX_N_HOLES 3
+// Platform details
+#define HOLE_MAX_N          3
+#define HOLE_MIN_SIZE       10
+#define HOLE_MAX_SIZE       20
+#define PLATFORM_HEIGHT     1
+#define PLATFORM_COLOR      Black
+#define DIG_HOLE_SIZE       5
+#define LCD_MAX_WIDTH       240
 
 struct Hole {
-  uint8_t size;
-  uint8_t loc;
+    uint8_t size;
+    uint8_t loc;
 };
 
 struct Platform {
-  struct Hole holes[MAX_N_HOLES];
-  uint8_t y_pos;
+    struct Hole holes[HOLE_MAX_N];
+    uint8_t y_pos;
 };
 
-struct Platform *new_platform(void);
+struct Platform *platform_generate(void);
 
-void update_loc_platform(struct Platform *platform, uint8_t y_pos);
+void platform_update_loc(struct Platform *platform, uint8_t y);
 
-void dig_platform(struct Platform *platform, uint8_t loc);
+void platform_dig(struct Platform *platform, uint8_t loc);
 
+// Modifies a platform bitmap array and digs all holes
+void platform_holify(struct Platform *platform, unsigned short *platform_bitmap, unsigned short bitmap_w, unsigned short bitmap_h);
 
+// Modifies a platform bitmap array and restores all holes
+void platform_deholify(struct Platform *platform, unsigned short *platform_bitmap, unsigned short bitmap_w, unsigned short bitmap_h);
 #endif
