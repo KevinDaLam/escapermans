@@ -10,26 +10,41 @@
 
 #define PLATFORM_INTERVAL_SIZE	60
 #define MAX_N_PLATFORMS			5
-#define SCREEN_HEIGHT			300
-#define AVATAR_SPEED			2
+#define SCREEN_HEIGHT			320
+#define AVATAR_SPEED			1
 #define TERMINAL_VELOCITY		4
+#define DEATH_HEIGHT			265
+#define platform_speed			1
 
 uint32_t score_count = 0;
 uint8_t n_lives = 3;
-uint8_t n_powerups = 3;
-uint8_t current_platform = MAX_N_PLATFORMS/2;
+uint8_t n_powerups = 8;
+unsigned char powerup_display = 0;
 
 struct Avatar *avatar1;
 bool avatar_orient_r = true;
 uint8_t fall_step = 1;
 
 struct Platform *platforms[MAX_N_PLATFORMS];
-uint8_t platform_speed = 1;
+uint8_t current_platform = MAX_N_PLATFORMS/2;
+uint8_t highest_platform = 0;
 
 OS_MUT avatar_mut;
 
 
 bool cmd_powerup = false;
+
+void game_over(void){
+	while(true){
+		unsigned char score[100];
+		snprintf(score, sizeof(score), "Score: %d", score_count);
+		
+		GLCD_Clear(Blue);
+		GLCD_DisplayString(2, 2, 1, "GAME OVER, LOSER");
+		GLCD_DisplayString(4, 2, 1, score);
+		
+	}
+}
 
 __task void update_avatar(void){
 	
@@ -43,6 +58,10 @@ __task void update_avatar(void){
 		
 		command = poll_joystick_direction();
 
+		if (avatar1->platform->y_pos >= DEATH_HEIGHT){
+			game_over();
+		}
+		
 		if (command == CMD_MOVE_LEFT){
 			avatar1->x_pos = avatar1->x_pos <= 0 ? 0 : (avatar1->x_pos >= AVATAR_SPEED ? avatar1->x_pos - AVATAR_SPEED : 0);
 			avatar_orient_r = false;
@@ -60,6 +79,9 @@ __task void update_avatar(void){
 			if(avatar1->y_pos_falling > avatar1->platform->y_pos){
 				avatar_fall_decrement_y(avatar1, fall_step);
 				fall_step = fall_step == TERMINAL_VELOCITY ? TERMINAL_VELOCITY : fall_step + 1;
+				if(avatar1->y_pos_falling <= 0){
+					game_over();	
+				}
 			}
 			else{
 				avatar1->falling = false;
@@ -72,7 +94,13 @@ __task void update_avatar(void){
 		else{
 			if(avatar_check_hole(avatar1)){
 				current_platform = (current_platform + 1) % MAX_N_PLATFORMS;
-				avatar_start_fall(avatar1, platforms[current_platform]);
+				if(current_platform == highest_platform){
+					struct Platform *ghost_platform = platform_spawn();
+					avatar_start_fall(avatar1, ghost_platform);
+				}
+				else{
+					avatar_start_fall(avatar1, platforms[current_platform]);
+				}
 			}
 		}
 		
@@ -82,8 +110,6 @@ __task void update_avatar(void){
 }
 
 __task void update_platforms(void){
-	
-	uint8_t highest_platform = 0;
 	
 	while(true){
 		
@@ -110,6 +136,8 @@ __task void update_platforms(void){
 				platform_dig(avatar1->platform, avatar1->x_pos);
 				cmd_powerup = false;
 				n_powerups--;
+				powerup_display &= ~(1 << n_powerups);
+				LED_display(powerup_display);
 			}
 	
 		}
@@ -133,8 +161,8 @@ __task void update_display(void){
 		for (j = 0; j < 100000; j++);
 		
 		for(i = 0; i < MAX_N_PLATFORMS; i++){
-			platform_refresh(platforms[i], platform_speed);
-			GLCD_update_platform(platforms[i], platform_speed);
+			platform_refresh(platforms[i]);
+			platform_display(platforms[i]);
 		}
 		
 		os_mut_release(&avatar_mut);
@@ -166,7 +194,7 @@ void platforms_setup(void){
 	
 	for(i = 0; i < MAX_N_PLATFORMS; i++){
 		platforms[i] = platform_spawn();
-		platforms[i]->y_pos = PLATFORM_INTERVAL_SIZE*(MAX_N_PLATFORMS - 1 - i);
+		platforms[i]->y_pos = PLATFORM_INTERVAL_SIZE*(MAX_N_PLATFORMS - 1 - i) + rand()%5;
 	}
 
 }
@@ -180,7 +208,11 @@ void avatar_setup(void){
 
 int main(void){
 	
+	int i;
+	
 	platforms_setup();
+	platform_bitmap_init();
+	
 	avatar_setup();
 	
 	//Powerup Button Initialization
@@ -189,11 +221,11 @@ int main(void){
 	LPC_GPIOINT->IO2IntEnF |= (1<<10);
   
 	//LED Initialization
-	LPC_GPIO1->FIODIR |= 0xB0000000;
-	LPC_GPIO2->FIODIR |= 0x7C;
-	
-	LPC_GPIO1->FIOCLR |= 0xFF000000;
-	LPC_GPIO2->FIOCLR |= 0xFF;
+	LED_setup();
+	for(i = 0; i < n_powerups; i++){
+		powerup_display |= (1 << i);
+	}
+	LED_display(powerup_display);
 	
 	//Display Initialization
 	GLCD_Init();

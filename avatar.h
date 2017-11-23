@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 #define SCREEN_WIDTH		240
-#define SCREEN_HEIGHT		300
+#define SCREEN_HEIGHT		320
 #define AVATAR_SIZE			24
 
 struct Avatar {
@@ -14,7 +14,7 @@ struct Avatar {
 	struct Platform *platform;
 	
 	bool falling;
-	uint16_t y_pos_falling;
+	int16_t y_pos_falling;
 	
 	uint8_t size;
 };
