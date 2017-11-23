@@ -5,13 +5,20 @@
 
 // Platform details
 #define HOLE_MAX_N          3
-#define HOLE_MIN_SIZE       10
-#define HOLE_MAX_SIZE       20
-#define PLATFORM_WIDTH      100
+#define HOLE_MIN_SIZE       30
+#define HOLE_MAX_SIZE       50
+#define DIG_HOLE_SIZE       30
+
+#define PLATFORM_WIDTH      240
 #define PLATFORM_HEIGHT     2
+#define PLATFORM_MAX_N		5
+#define PLATFORM_DIST		40
 #define PLATFORM_COLOR      Black
-#define DIG_HOLE_SIZE       5
+#define BACKGROUND_COLOR	White
+
 #define LCD_MAX_WIDTH       240
+#define LCD_MAX_HEIGHT		320
+#define LCD_PLAT_MAX_HEIGHT	300
 
 struct Hole {
     uint8_t size;
@@ -20,18 +27,20 @@ struct Hole {
 
 struct Platform {
     struct Hole holes[HOLE_MAX_N];
-    uint8_t y_pos;
+    uint16_t y_pos;
 };
 
-struct Platform *platform_generate(void);
+struct Platform *platform_spawn(void);
 
-void platform_update_loc(struct Platform *platform, uint8_t y);
+// Moves platform up by <y> pixels
+void platform_refresh(struct Platform *platform, int refresh_step);
 
 void platform_dig(struct Platform *platform, uint8_t loc);
 
-// Modifies a platform bitmap array and digs all holes
-void platform_holify(struct Platform *platform, unsigned short *platform_bitmap, unsigned short bitmap_w);
+// Adds holes to the platform on the LCD
+void platform_holify(struct Platform *platform, int hole_n);
 
-// Modifies a platform bitmap array and restores all holes
-void platform_deholify(struct Platform *platform, unsigned short *platform_bitmap, unsigned short bitmap_w);
+void platform_recycle(struct Platform *platform);
+
+
 #endif
