@@ -1,5 +1,21 @@
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "avatar.h"
 #include "platform.h"
+
+struct Avatar *avatar_init(void){
+	
+	struct Avatar *avatar = malloc(sizeof(struct Avatar));
+	
+	avatar->x_pos = SCREEN_WIDTH/2;
+	avatar->platform = NULL;
+	avatar->falling = false;
+	avatar->y_pos_falling = SCREEN_HEIGHT/2;
+	avatar->size = AVATAR_SIZE;
+	
+	return avatar;
+}
 
 uint8_t avatar_get_y(struct Avatar *avatar){
 	return avatar->platform->y_pos;
@@ -13,10 +29,10 @@ bool avatar_check_hole(struct Avatar *avatar){
 	
 	int i;
 	
-	for (i = 0; i < HOLE_MAX_N){
+	for (i = 0; i < HOLE_MAX_N; i++){
 		
-		uint8_t hole_loc = avatar->platform->holes[i].loc
-		uint8_t hole_size = avatar->platform->holes[i].size
+		uint8_t hole_loc = avatar->platform->holes[i].loc;
+		uint8_t hole_size = avatar->platform->holes[i].size;
 		
 		if ((avatar->x_pos >= hole_loc) && (avatar->x_pos + avatar->size <= hole_loc + hole_size)){
 			return true;
@@ -28,11 +44,11 @@ bool avatar_check_hole(struct Avatar *avatar){
 }
 
 void avatar_start_fall(struct Avatar *avatar, struct Platform *next_plat){
-	y_pos_falling = avatar->platform->y_pos
+	avatar->y_pos_falling = avatar->platform->y_pos;
 	avatar->platform = next_plat;
-	falling = true;
+	avatar->falling = true;
 }
 
-void avatar_fall_decrement_y(struct Avatar *avatar){
-	avatar->y_pos_falling -= FALLING_INTERVAL;
+void avatar_fall_decrement_y(struct Avatar *avatar, uint8_t fall_step){
+	avatar->y_pos_falling -= fall_step;
 }
