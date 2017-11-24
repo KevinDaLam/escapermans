@@ -29,6 +29,7 @@ void GLCD_update_platform(struct Platform *platform, int refresh_step);
 
 void GLCD_update_lives(void);
 
+//Erases bitmap of avatar at current position
 void GLCD_clear_avatar(struct Avatar *avatar);
 
 #endif

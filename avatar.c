@@ -17,10 +17,6 @@ struct Avatar *avatar_init(void){
 	return avatar;
 }
 
-uint8_t avatar_get_y(struct Avatar *avatar){
-	return avatar->platform->y_pos;
-}
-
 void avatar_bind_platform(struct Avatar *avatar, struct Platform *plat){
 	avatar->platform = plat;
 }
@@ -28,12 +24,13 @@ void avatar_bind_platform(struct Avatar *avatar, struct Platform *plat){
 bool avatar_check_hole(struct Avatar *avatar){
 	
 	int i;
-	
+
 	for (i = 0; i < HOLE_MAX_N; i++){
 		
 		uint8_t hole_loc = avatar->platform->holes[i].loc;
 		uint8_t hole_size = avatar->platform->holes[i].size;
 		
+		//Checks if avatar x dimensions is within hole dimensions
 		if ((avatar->x_pos >= hole_loc) && (avatar->x_pos + avatar->size <= hole_loc + hole_size)){
 			return true;
 		}

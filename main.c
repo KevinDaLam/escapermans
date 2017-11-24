@@ -34,6 +34,7 @@ OS_MUT avatar_mut;
 
 bool cmd_powerup = false;
 
+//When game end conditions are met, screen changes and stays in this screen
 void game_over(void){
 	while(true){
 		unsigned char score[100];
@@ -46,6 +47,7 @@ void game_over(void){
 	}
 }
 
+//Task to update avatar struct
 __task void update_avatar(void){
 	
 	uint8_t command;
@@ -58,15 +60,20 @@ __task void update_avatar(void){
 		
 		command = poll_joystick_direction();
 
+		//Avatar reaches top, dies
 		if (avatar1->platform->y_pos >= DEATH_HEIGHT){
 			game_over();
 		}
 		
+		//Moves avatar left
 		if (command == CMD_MOVE_LEFT){
+			//Left wall collision check
 			avatar1->x_pos = avatar1->x_pos <= 0 ? 0 : (avatar1->x_pos >= AVATAR_SPEED ? avatar1->x_pos - AVATAR_SPEED : 0);
 			avatar_orient_r = false;
 		}
+		//Moves avatar right
 		else if (command == CMD_MOVE_RIGHT){
+			//Right wall collision check
 			avatar1->x_pos = avatar1->x_pos >= SCREEN_WIDTH - avatar1->size ? SCREEN_WIDTH - avatar1->size  : avatar1->x_pos + AVATAR_SPEED;
 			avatar_orient_r = true;
 		}
@@ -74,8 +81,10 @@ __task void update_avatar(void){
 		
 		if (avatar1->falling){
 			
+			//Removes afterimage pixels of falling avatar
 			GLCD_clear_avatar(avatar1);
 			
+			//Continues falling if it has not reached the next platform or bottom of screen
 			if(avatar1->y_pos_falling > avatar1->platform->y_pos){
 				avatar_fall_decrement_y(avatar1, fall_step);
 				fall_step = fall_step == TERMINAL_VELOCITY ? TERMINAL_VELOCITY : fall_step + 1;
@@ -86,12 +95,15 @@ __task void update_avatar(void){
 			else{
 				avatar1->falling = false;
 				score_count++;
+				//Keeps falling speed if there is another hole after falling
 				if (!avatar_check_hole(avatar1)){
 					fall_step = 0;
 				}
 			}
 		}
 		else{
+
+			//Starts falling if avatar is above hole
 			if(avatar_check_hole(avatar1)){
 				current_platform = (current_platform + 1) % MAX_N_PLATFORMS;
 				if(current_platform == highest_platform){
@@ -120,17 +132,14 @@ __task void update_platforms(void){
 		os_mut_wait(&avatar_mut, 0xffff);
 		
 		for(i = 0; i < MAX_N_PLATFORMS; i++){
-			/*
-			if((platforms[i == 0 ? MAX_N_PLATFORMS-1:i-1]->y_pos >= platforms[i]->y_pos + PLATFORM_INTERVAL_SIZE) || i != highest_platform){
-				platform_refresh(platforms[i], platform_speed);
-			}
-			*/
-		
+			
+			//Moves platforms that reach the top to the bottom
 			if (platforms[highest_platform]->y_pos >= SCREEN_HEIGHT){
 				platform_recycle(platforms[highest_platform]);
 				highest_platform = (highest_platform + 1) % MAX_N_PLATFORMS;
 			}
 		
+			//Creates holes when powerup button is pressed
 			if (cmd_powerup && n_powerups){
 				printf("HELLO");
 				platform_dig(avatar1->platform, avatar1->x_pos);
@@ -158,6 +167,7 @@ __task void update_display(void){
 		
 		GLCD_update_avatar(avatar1, avatar_orient_r);
 		
+		//Delay for platform display update
 		for (j = 0; j < 100000; j++);
 		
 		for(i = 0; i < MAX_N_PLATFORMS; i++){
@@ -183,6 +193,7 @@ __task void start_tasks(void){
 	
 }
 
+//Powerup button triggers flag for tasks to check
 void EINT3_IRQHandler(void){
 	cmd_powerup = true;
 	LPC_GPIOINT->IO2IntClr |= (1<<10);
@@ -192,6 +203,7 @@ void platforms_setup(void){
 	
 	int i;
 	
+	//Spawns platforms at minimum interval size apart
 	for(i = 0; i < MAX_N_PLATFORMS; i++){
 		platforms[i] = platform_spawn();
 		platforms[i]->y_pos = PLATFORM_INTERVAL_SIZE*(MAX_N_PLATFORMS - 1 - i) + rand()%5;
@@ -202,6 +214,7 @@ void platforms_setup(void){
 void avatar_setup(void){
 	avatar1 = avatar_init();
 	
+	//Avatar starts on middle platform
 	avatar1->platform = platforms[current_platform];
 	avatar1->x_pos = SCREEN_WIDTH/2;
 }

@@ -19,16 +19,19 @@ struct Avatar {
 	uint8_t size;
 };
 
+//Constructor for Avatar struct
 struct Avatar* avatar_init(void);
 
-uint8_t avatar_get_y(struct Avatar *avatar);
-
+//Assigns avatar to platform
 void avatar_bind_platform(struct Avatar *avatar, struct Platform *plat);
 
+//Checks if avatar is standing above hole
 bool avatar_check_hole(struct Avatar *avatar);
 
+//Initiates avatar falling
 void avatar_start_fall(struct Avatar *avatar, struct Platform *next_plat);
 
+//Decreases avatar y position when falling
 void avatar_fall_decrement_y(struct Avatar *avatar, uint8_t fall_step);
 
 #endif
